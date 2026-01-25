@@ -4,6 +4,15 @@ import AboutSection from '@/components/about-section';
 import { Project, Profile } from '@/types';
 
 async function getProjects(): Promise<Project[]> {
+    // Check if Supabase is configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    if (!supabaseUrl) {
+        // Use mock data
+        const { mockProjects } = await import('@/lib/mock-data');
+        return await mockProjects.getAll();
+    }
+
     const { data, error } = await supabase
         .from('projects')
         .select('*')
@@ -19,6 +28,15 @@ async function getProjects(): Promise<Project[]> {
 }
 
 async function getProfile(): Promise<Profile | null> {
+    // Check if Supabase is configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    if (!supabaseUrl) {
+        // Use mock data
+        const { mockProfile } = await import('@/lib/mock-data');
+        return await mockProfile.get();
+    }
+
     const { data, error } = await supabase
         .from('profile')
         .select('*')

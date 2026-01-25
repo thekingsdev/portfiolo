@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase/client';
 export async function POST(request: NextRequest) {
     try {
         const formData = await request.formData();
-        const file = formData.get('file') as File;
+        const file = formData.get('image') as File;
         const title = formData.get('title') as string;
         const description = formData.get('description') as string;
 
@@ -15,52 +15,78 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Upload image to Supabase Storage
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `projects/${fileName}`;
+        // Check if Supabase is configured
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const useMock = !supabaseUrl;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('portfolio-assets')
-            .upload(filePath, file, {
-                contentType: file.type,
-                upsert: false,
-            });
+        if (useMock) {
+            // Use mock data
+            const { mockProjects, fileToBase64 } = await import('@/lib/mock-data');
+            const imageBase64 = await fileToBase64(file);
 
-        if (uploadError) {
-            console.error('Upload error:', uploadError);
-            return NextResponse.json(
-                { error: 'Failed to upload image' },
-                { status: 500 }
-            );
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-            .from('portfolio-assets')
-            .getPublicUrl(filePath);
-
-        // Insert project into database
-        const { data: project, error: dbError } = await supabase
-            .from('projects')
-            .insert({
+            const project = await mockProjects.create({
                 title,
                 description,
-                image_url: publicUrl,
-                display_order: 0,
-            })
-            .select()
-            .single();
+                image_url: imageBase64,
+            });
 
-        if (dbError) {
-            console.error('Database error:', dbError);
+            return NextResponse.json({ success: true, project });
+        }
+
+        // Try Supabase upload
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `projects/${fileName}`;
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('portfolio-assets')
+                .upload(filePath, file, {
+                    contentType: file.type,
+                    upsert: false,
+                });
+
+            if (uploadError) {
+                console.error('Upload error:', uploadError);
+                return NextResponse.json(
+                    { error: 'Failed to upload image' },
+                    { status: 500 }
+                );
+            }
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('portfolio-assets')
+                .getPublicUrl(filePath);
+
+            // Insert project into database
+            const { data: project, error: dbError } = await supabase
+                .from('projects')
+                .insert({
+                    title,
+                    description,
+                    image_url: publicUrl,
+                    display_order: 0,
+                })
+                .select()
+                .single();
+
+            if (dbError) {
+                console.error('Database error:', dbError);
+                return NextResponse.json(
+                    { error: 'Failed to create project' },
+                    { status: 500 }
+                );
+            }
+
+            return NextResponse.json({ success: true, project });
+        } catch (error) {
+            console.error('Supabase error:', error);
             return NextResponse.json(
-                { error: 'Failed to create project' },
+                { error: 'Failed to upload project' },
                 { status: 500 }
             );
         }
-
-        return NextResponse.json({ success: true, project });
     } catch (error) {
         console.error('Error:', error);
         return NextResponse.json(
@@ -80,6 +106,17 @@ export async function DELETE(request: NextRequest) {
                 { error: 'Project ID is required' },
                 { status: 400 }
             );
+        }
+
+        // Check if Supabase is configured
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const useMock = !supabaseUrl;
+
+        if (useMock) {
+            // Use mock data
+            const { mockProjects } = await import('@/lib/mock-data');
+            await mockProjects.delete(id);
+            return NextResponse.json({ success: true });
         }
 
         // Get project to find image URL

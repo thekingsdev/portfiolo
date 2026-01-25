@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, Folder, User } from 'lucide-react';
+import { LogOut, Folder, User, Home } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 
 export default function AdminLayout({
@@ -46,8 +46,8 @@ export default function AdminLayout({
                                     <Link
                                         href={item.href}
                                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                                ? 'bg-foreground text-background'
-                                                : 'hover:bg-muted'
+                                            ? 'bg-foreground text-background'
+                                            : 'hover:bg-muted'
                                             }`}
                                     >
                                         <Icon className="w-5 h-5" />
@@ -59,7 +59,15 @@ export default function AdminLayout({
                     </ul>
                 </nav>
 
-                <div className="p-4 border-t border-border">
+                <div className="p-4 border-t border-border space-y-2">
+                    <Link
+                        href="/"
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-lg hover:bg-muted transition-colors text-blue-600"
+                    >
+                        <Home className="w-5 h-5" />
+                        <span className="font-medium">View Portfolio</span>
+                    </Link>
+
                     <button
                         onClick={handleLogout}
                         className="flex items-center gap-3 w-full px-4 py-3 rounded-lg hover:bg-muted transition-colors text-red-600"

@@ -15,6 +15,27 @@ export async function PUT(request: NextRequest) {
             );
         }
 
+        // Check if Supabase is configured
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const useMock = !supabaseUrl;
+
+        if (useMock) {
+            // Use mock data
+            const { mockProfile, fileToBase64 } = await import('@/lib/mock-data');
+            const updateData: any = { bio };
+
+            if (avatarFile) {
+                updateData.avatar_url = await fileToBase64(avatarFile);
+            }
+
+            if (cvFile) {
+                updateData.cv_url = await fileToBase64(cvFile);
+            }
+
+            const profile = await mockProfile.update(updateData);
+            return NextResponse.json({ success: true, profile });
+        }
+
         const updateData: any = { bio };
 
         // Handle avatar upload

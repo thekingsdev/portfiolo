@@ -18,18 +18,34 @@ export default function LoginPage() {
         setError('');
 
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            // Try Supabase authentication first
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
 
-            if (error) throw error;
+                if (!error && data.session) {
+                    // Store the access token in a cookie
+                    document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600`;
+                    router.push('/admin');
+                    router.refresh();
+                    return;
+                }
+            } catch (supabaseError) {
+                console.log('Supabase not configured, using mock auth');
+            }
 
-            if (data.session) {
-                // Store the access token in a cookie
-                document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600`;
+            // Fallback to mock authentication
+            const { mockAuth } = await import('@/lib/mock-data');
+            const result = await mockAuth.signIn(email, password);
+
+            if (result.success && result.session) {
+                document.cookie = `sb-access-token=${result.session.access_token}; path=/; max-age=3600`;
                 router.push('/admin');
                 router.refresh();
+            } else {
+                throw new Error(result.error || 'Invalid credentials');
             }
         } catch (err: any) {
             setError(err.message || 'Failed to login');
@@ -47,6 +63,10 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
+                    <div className="bg-blue-50 text-blue-800 text-sm p-3 rounded-lg border border-blue-200">
+                        <strong>Demo Mode:</strong> Use <code className="bg-blue-100 px-1 rounded">admin@portfolio.com</code> / <code className="bg-blue-100 px-1 rounded">admin123</code>
+                    </div>
+
                     {error && (
                         <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
                             {error}

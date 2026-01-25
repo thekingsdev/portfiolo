@@ -3,6 +3,15 @@ import ProfileForm from '@/components/admin/profile-form';
 import { Profile } from '@/types';
 
 async function getProfile(): Promise<Profile | null> {
+    // Check if Supabase is configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    if (!supabaseUrl) {
+        // Use mock data
+        const { mockProfile } = await import('@/lib/mock-data');
+        return await mockProfile.get();
+    }
+
     const { data, error } = await supabase
         .from('profile')
         .select('*')

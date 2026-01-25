@@ -4,6 +4,15 @@ import ProjectList from '@/components/admin/project-list';
 import { Project } from '@/types';
 
 async function getProjects(): Promise<Project[]> {
+    // Check if Supabase is configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    if (!supabaseUrl) {
+        // Use mock data
+        const { mockProjects } = await import('@/lib/mock-data');
+        return await mockProjects.getAll();
+    }
+
     const { data, error } = await supabase
         .from('projects')
         .select('*')
