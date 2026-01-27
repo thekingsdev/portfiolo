@@ -35,7 +35,7 @@ export default function ProjectUploadForm() {
 
         try {
             const formData = new FormData();
-            formData.append('file', data.image[0]);
+            formData.append('image', data.image[0]);
             formData.append('title', data.title);
             formData.append('description', data.description);
 

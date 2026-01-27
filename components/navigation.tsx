@@ -2,9 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export default function Navigation() {
     const pathname = usePathname();
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 50);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     // Don't show navigation on admin pages
     if (pathname?.startsWith('/admin') || pathname === '/login') {
@@ -19,7 +29,8 @@ export default function Navigation() {
     };
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-border">
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-background/80 backdrop-blur-md border-b border-white/10' : 'bg-transparent border-none'
+            }`}>
             <div className="container-custom py-6 flex items-center justify-between">
                 <Link href="/" className="text-xl font-semibold tracking-tight hover:opacity-70 transition-opacity">
                     Portfolio

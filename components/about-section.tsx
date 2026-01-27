@@ -1,66 +1,56 @@
 'use client';
 
-import Image from 'next/image';
-import { Download } from 'lucide-react';
 import { Profile } from '@/types';
+import { Mail, Download } from 'lucide-react';
 
 interface AboutSectionProps {
     profile: Profile;
 }
 
 export default function AboutSection({ profile }: AboutSectionProps) {
-    const handleDownloadCV = () => {
-        if (profile.cv_url) {
-            window.open(profile.cv_url, '_blank');
-        }
-    };
-
     return (
-        <section id="about" className="py-24 bg-muted">
-            <div className="container-custom">
-                <div className="max-w-4xl mx-auto">
-                    <div className="grid md:grid-cols-2 gap-12 items-center">
-                        {/* Profile Image */}
-                        <div className="order-2 md:order-1">
-                            <div className="relative aspect-square rounded-lg overflow-hidden bg-white">
-                                {profile.avatar_url ? (
-                                    <Image
-                                        src={profile.avatar_url}
-                                        alt="Profile"
-                                        fill
-                                        className="object-cover"
-                                        sizes="(max-width: 768px) 100vw, 50vw"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                        <span className="text-6xl font-bold">?</span>
-                                    </div>
-                                )}
-                            </div>
+        <section id="about" className="relative py-24">
+
+            <div className="container-custom relative z-10">
+                <div className="max-w-4xl mx-auto text-center">
+                    {/* Section Title - Centered */}
+                    <h2 className="text-4xl md:text-5xl font-bold mb-16">About Me</h2>
+
+                    {/* Image - Centered */}
+                    {profile.avatar_url && (
+                        <div className="mb-12 flex justify-center">
+                            <img
+                                src={profile.avatar_url}
+                                alt="Profile"
+                                className="rounded-2xl w-64 h-64 object-cover shadow-lg"
+                            />
                         </div>
+                    )}
 
-                        {/* Bio and CTA */}
-                        <div className="order-1 md:order-2 space-y-6">
-                            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-                                About
-                            </h2>
+                    {/* Bio Text - Centered */}
+                    <p className="text-lg text-foreground/80 mb-8 leading-relaxed whitespace-pre-wrap">
+                        {profile.bio}
+                    </p>
 
-                            <div className="prose prose-lg">
-                                <p className="text-foreground/70 leading-relaxed whitespace-pre-line">
-                                    {profile.bio || 'Your bio goes here. Update this from the admin dashboard.'}
-                                </p>
-                            </div>
-
-                            {profile.cv_url && (
-                                <button
-                                    onClick={handleDownloadCV}
-                                    className="inline-flex items-center gap-2 bg-foreground text-background px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
-                                >
-                                    <Download className="w-5 h-5" />
-                                    Download CV
-                                </button>
-                            )}
-                        </div>
+                    {/* Buttons - Centered */}
+                    <div className="flex flex-wrap gap-4 justify-center">
+                        {profile.cv_url && (
+                            <a
+                                href={profile.cv_url}
+                                download
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-lg font-medium hover:opacity-90 transition-opacity"
+                            >
+                                <Download className="w-4 h-4" />
+                                Download CV
+                            </a>
+                        )}
+                        <a
+                            href="mailto:danielalli5742@gmail.com"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-muted rounded-lg font-medium hover:bg-border transition-colors"
+                        >
+                            <Mail className="w-4 h-4" />
+                            Get in Touch
+                        </a>
                     </div>
                 </div>
             </div>

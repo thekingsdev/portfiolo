@@ -22,7 +22,7 @@ export interface MockProfile {
 const isBrowser = typeof window !== 'undefined';
 
 // Storage keys
-const PROJECTS_KEY = 'portfolio_projects';
+const PROJECTS_KEY = 'portfolio_projects_v2';
 const PROFILE_KEY = 'portfolio_profile';
 const AUTH_KEY = 'portfolio_auth';
 
@@ -71,7 +71,39 @@ export const mockProjects = {
     getAll: async (): Promise<MockProject[]> => {
         if (!isBrowser) return [];
         const data = localStorage.getItem(PROJECTS_KEY);
-        return data ? JSON.parse(data) : [];
+        if (data) return JSON.parse(data);
+
+        // Initial seed data if storage is empty
+        const initialProjects: MockProject[] = [
+            {
+                id: '1',
+                title: 'The Brand Atelier: Business Checkup',
+                description: 'Year-end diagnostic & growth workshop branding specifically designed to help businesses step into 2026 with clarity.',
+                image_url: '/images/projects/business-checkup.jpg',
+                created_at: new Date().toISOString(),
+                display_order: 1
+            },
+            {
+                id: '2',
+                title: 'RUIMUN 2026 Sponsorship',
+                description: 'Call for sponsorship campaign design for RUIMUN 2026, featuring bold typography and textured elements.',
+                image_url: '/images/projects/ruimun-sponsorship.jpg',
+                created_at: new Date(Date.now() - 86400000).toISOString(),
+                display_order: 2
+            },
+            {
+                id: '3',
+                title: 'STUWES Easter Campaign',
+                description: 'Impactful Easter visual identity centered around the theme "He rose, So will you".',
+                image_url: '/images/projects/stuwes-easter.jpg',
+                created_at: new Date(Date.now() - 172800000).toISOString(),
+                display_order: 3
+            }
+        ];
+
+        // Save initial data to local storage so it persists
+        localStorage.setItem(PROJECTS_KEY, JSON.stringify(initialProjects));
+        return initialProjects;
     },
 
     create: async (project: Omit<MockProject, 'id' | 'created_at' | 'display_order'>): Promise<MockProject> => {

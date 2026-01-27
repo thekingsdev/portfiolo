@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { LogOut, Folder, User, Home } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 
+import Aurora from '@/components/Aurora';
+
 export default function AdminLayout({
     children,
 }: {
@@ -28,11 +30,21 @@ export default function AdminLayout({
     ];
 
     return (
-        <div className="min-h-screen bg-muted">
+        <div className="min-h-screen relative overflow-hidden bg-background">
+            {/* Shared Aurora Background */}
+            <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
+                <Aurora
+                    colorStops={["#bababa", "#B19EEF", "#5227FF"]}
+                    blend={0.5}
+                    amplitude={1.0}
+                    speed={0.5}
+                />
+            </div>
+
             {/* Sidebar */}
-            <aside className="fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-border flex flex-col">
-                <div className="p-6 border-b border-border">
-                    <h1 className="text-xl font-bold tracking-tight">Admin Panel</h1>
+            <aside className="fixed left-0 top-0 bottom-0 w-64 bg-background/80 backdrop-blur-xl border-r border-white/10 flex flex-col z-20">
+                <div className="p-6 border-b border-white/10">
+                    <h1 className="text-xl font-bold tracking-tight text-white">Admin Panel</h1>
                 </div>
 
                 <nav className="flex-1 p-4">
@@ -46,8 +58,8 @@ export default function AdminLayout({
                                     <Link
                                         href={item.href}
                                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                            ? 'bg-foreground text-background'
-                                            : 'hover:bg-muted'
+                                            ? 'bg-white/10 text-white'
+                                            : 'text-white/60 hover:bg-white/5 hover:text-white'
                                             }`}
                                     >
                                         <Icon className="w-5 h-5" />
@@ -59,10 +71,10 @@ export default function AdminLayout({
                     </ul>
                 </nav>
 
-                <div className="p-4 border-t border-border space-y-2">
+                <div className="p-4 border-t border-white/10 space-y-2">
                     <Link
                         href="/"
-                        className="flex items-center gap-3 w-full px-4 py-3 rounded-lg hover:bg-muted transition-colors text-blue-600"
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-lg hover:bg-white/5 transition-colors text-blue-400"
                     >
                         <Home className="w-5 h-5" />
                         <span className="font-medium">View Portfolio</span>
@@ -70,7 +82,7 @@ export default function AdminLayout({
 
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 w-full px-4 py-3 rounded-lg hover:bg-muted transition-colors text-red-600"
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-lg hover:bg-red-500/10 transition-colors text-red-400"
                     >
                         <LogOut className="w-5 h-5" />
                         <span className="font-medium">Logout</span>
@@ -79,8 +91,10 @@ export default function AdminLayout({
             </aside>
 
             {/* Main Content */}
-            <main className="ml-64 p-8">
-                {children}
+            <main className="relative ml-64 p-8 z-10">
+                <div className="bg-background/40 backdrop-blur-md rounded-2xl border border-white/5 p-6 min-h-[calc(100vh-4rem)]">
+                    {children}
+                </div>
             </main>
         </div>
     );
