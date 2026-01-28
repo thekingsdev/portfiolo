@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { Loader2 } from 'lucide-react';
 
+import Aurora from '@/components/Aurora';
+
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -55,26 +57,36 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-muted px-4">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+        <div className="min-h-screen relative flex items-center justify-center bg-background overflow-hidden px-4">
+            {/* Background Aurora */}
+            <div className="absolute inset-0 z-0 opacity-40">
+                <Aurora
+                    colorStops={["#bababa", "#B19EEF", "#5227FF"]}
+                    blend={0.5}
+                    amplitude={1.2}
+                    speed={0.4}
+                />
+            </div>
+
+            <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 shadow-2xl relative z-10">
                 <div className="mb-8 text-center">
-                    <h1 className="text-3xl font-bold tracking-tight mb-2">Admin Login</h1>
-                    <p className="text-foreground/70">Sign in to manage your portfolio</p>
+                    <h1 className="text-3xl font-bold tracking-tight mb-2 text-white">Admin Login</h1>
+                    <p className="text-white/60">Sign in to manage your portfolio</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
-                    <div className="bg-blue-50 text-blue-800 text-sm p-3 rounded-lg border border-blue-200">
-                        <strong>Demo Mode:</strong> Use <code className="bg-blue-100 px-1 rounded">admin@portfolio.com</code> / <code className="bg-blue-100 px-1 rounded">admin123</code>
+                    <div className="bg-blue-500/10 text-blue-300 text-sm p-3 rounded-lg border border-blue-500/20">
+                        <strong>Demo Mode:</strong> Use <code className="bg-blue-500/20 px-1 rounded text-white">admin@portfolio.com</code> / <code className="bg-blue-500/20 px-1 rounded text-white">admin123</code>
                     </div>
 
                     {error && (
-                        <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
+                        <div className="bg-red-500/10 text-red-400 text-sm p-3 rounded-lg border border-red-500/20">
                             {error}
                         </div>
                     )}
 
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium mb-2">
+                        <label htmlFor="email" className="block text-sm font-medium mb-2 text-white">
                             Email
                         </label>
                         <input
@@ -83,13 +95,13 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-foreground"
+                            className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder:text-white/30"
                             placeholder="your@email.com"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium mb-2">
+                        <label htmlFor="password" className="block text-sm font-medium mb-2 text-white">
                             Password
                         </label>
                         <input
@@ -98,7 +110,7 @@ export default function LoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-foreground"
+                            className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder:text-white/30"
                             placeholder="••••••••"
                         />
                     </div>
@@ -106,7 +118,7 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-foreground text-background py-3 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full bg-white text-black py-3 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                         {loading && <Loader2 className="w-5 h-5 animate-spin" />}
                         {loading ? 'Signing in...' : 'Sign In'}

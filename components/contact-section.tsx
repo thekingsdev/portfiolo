@@ -67,7 +67,7 @@ export default function ContactSection() {
             <footer className="container-custom pt-20 mt-20 border-t border-border">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-foreground/50">
                     <p>© {new Date().getFullYear()} Portfolio. All rights reserved.</p>
-                    <p>Designed & Developed with ❤️</p>
+                    <p>Developed with kingsscribe</p>
                 </div>
             </footer>
         </section>

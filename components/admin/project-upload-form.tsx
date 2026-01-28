@@ -34,23 +34,43 @@ export default function ProjectUploadForm() {
         setError('');
 
         try {
-            const formData = new FormData();
-            formData.append('image', data.image[0]);
-            formData.append('title', data.title);
-            formData.append('description', data.description);
+            // Check if we're using Supabase or Mock data
+            const isMock = !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-            const response = await fetch('/api/projects', {
-                method: 'POST',
-                body: formData,
-            });
+            if (isMock) {
+                // Client-side mock upload
+                const imageFile = data.image[0];
+                const imageBase64 = await fileToBase64(imageFile);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to upload project');
+                await mockProjects.create({
+                    title: data.title,
+                    description: data.description,
+                    image_url: imageBase64,
+                });
+
+                reset();
+                router.refresh();
+                // Force a small reload to ensure data updates are reflected in grid
+                setTimeout(() => window.location.reload(), 100);
+            } else {
+                const formData = new FormData();
+                formData.append('image', data.image[0]);
+                formData.append('title', data.title);
+                formData.append('description', data.description);
+
+                const response = await fetch('/api/projects', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to upload project');
+                }
+
+                reset();
+                router.refresh();
             }
-
-            reset();
-            router.refresh();
         } catch (err: any) {
             setError(err.message || 'An error occurred');
         } finally {
@@ -59,48 +79,48 @@ export default function ProjectUploadForm() {
     };
 
     return (
-        <div className="bg-white rounded-lg p-6 border border-border">
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {error && (
-                    <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
+                    <div className="bg-red-500/10 text-red-400 text-sm p-3 rounded-lg border border-red-500/20">
                         {error}
                     </div>
                 )}
 
                 <div>
-                    <label htmlFor="title" className="block text-sm font-medium mb-2">
+                    <label htmlFor="title" className="block text-sm font-medium mb-2 text-white">
                         Project Title *
                     </label>
                     <input
                         id="title"
                         type="text"
                         {...register('title')}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-foreground"
+                        className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder:text-white/30"
                         placeholder="My Awesome Project"
                     />
                     {errors.title && (
-                        <p className="text-red-600 text-sm mt-1">{errors.title.message}</p>
+                        <p className="text-red-400 text-sm mt-1">{errors.title.message}</p>
                     )}
                 </div>
 
                 <div>
-                    <label htmlFor="description" className="block text-sm font-medium mb-2">
+                    <label htmlFor="description" className="block text-sm font-medium mb-2 text-white">
                         Description *
                     </label>
                     <textarea
                         id="description"
                         {...register('description')}
                         rows={4}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-foreground"
+                        className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder:text-white/30"
                         placeholder="Tell us about this project..."
                     />
                     {errors.description && (
-                        <p className="text-red-600 text-sm mt-1">{errors.description.message}</p>
+                        <p className="text-red-400 text-sm mt-1">{errors.description.message}</p>
                     )}
                 </div>
 
                 <div>
-                    <label htmlFor="image" className="block text-sm font-medium mb-2">
+                    <label htmlFor="image" className="block text-sm font-medium mb-2 text-white">
                         Project Image *
                     </label>
                     <input
@@ -108,7 +128,7 @@ export default function ProjectUploadForm() {
                         type="file"
                         accept="image/*"
                         {...register('image')}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-muted file:font-medium hover:file:bg-border"
+                        className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:font-medium hover:file:bg-white/20 cursor-pointer"
                     />
                     {errors.image && (
                         <p className="text-red-600 text-sm mt-1">{errors.image.message as string}</p>
@@ -118,7 +138,7 @@ export default function ProjectUploadForm() {
                 <button
                     type="submit"
                     disabled={uploading}
-                    className="w-full bg-foreground text-background py-3 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full bg-white text-black py-3 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                     {uploading ? (
                         <>

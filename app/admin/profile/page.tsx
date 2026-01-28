@@ -41,7 +41,7 @@ export default async function ProfilePage() {
 
     return (
         <div className="max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight mb-8">Edit Profile</h1>
+            <h1 className="text-4xl font-bold tracking-tight mb-8 text-white">Edit Profile</h1>
             <ProfileForm profile={profile} />
         </div>
     );
