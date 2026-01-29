@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Trash2, Loader2 } from 'lucide-react';
 import { Project } from '@/types';
 import { mockProjects } from '@/lib/mock-data';
-import { supabase } from '@/lib/supabase/client';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 interface ProjectListProps {
     projects: Project[];
@@ -24,7 +24,7 @@ export default function ProjectList({ projects }: ProjectListProps) {
         setDeletingId(project.id);
 
         try {
-            const isMock = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const isMock = !isSupabaseConfigured();
 
             if (isMock) {
                 // Client-side mock delete

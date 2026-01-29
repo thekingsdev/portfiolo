@@ -7,12 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import imageCompression from 'browser-image-compression';
 
-import { supabase } from '@/lib/supabase/client';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 const projectSchema = z.object({
     title: z.string().min(1, 'Title is required'),
-    description: z.string().min(1, 'Description is required'),
+    description: z.string().optional(),
     image: z.any().refine((files) => files?.length > 0, 'Image is required'),
 });
 
@@ -60,7 +61,7 @@ export default function ProjectUploadForm() {
 
         try {
             // Check if we're using Supabase or Mock data
-            const isMock = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const isMock = !isSupabaseConfigured();
 
             // Debug: Check Session
             const { data: { session } } = await supabase.auth.getSession();
@@ -76,8 +77,25 @@ export default function ProjectUploadForm() {
                 await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate delay
                 setUploadProgress(100);
             } else {
-                const imageFile = data.image[0];
-                const fileExt = imageFile.name.split('.').pop();
+                let imageFile = data.image[0];
+
+                // Compress Image
+                try {
+                    const options = {
+                        maxSizeMB: 1,
+                        maxWidthOrHeight: 1920,
+                        useWebWorker: true,
+                    };
+                    const compressedFile = await imageCompression(imageFile, options);
+                    // Use compressed file if it is smaller, otherwise use original (unlikely but safe)
+                    if (compressedFile.size < imageFile.size) {
+                        imageFile = compressedFile;
+                    }
+                } catch (error) {
+                    console.error('Compression failed, using original file:', error);
+                }
+
+                const fileExt = imageFile.name.split('.').pop() || 'jpg';
                 const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
                 const filePath = `projects/${fileName}`;
 
@@ -145,6 +163,16 @@ export default function ProjectUploadForm() {
         <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
             <h2 className="text-xl font-semibold mb-6 text-white">Upload New Project</h2>
 
+            {!isSupabaseConfigured() && (
+                <div className="mb-6 bg-yellow-500/10 text-yellow-400 text-sm p-4 rounded-lg border border-yellow-500/20 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="font-semibold mb-1">Supabase Not Configured</p>
+                        <p>Uploads will be simulated (mock mode). To save images to Supabase, please set up your environment variables.</p>
+                    </div>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <AnimatePresence mode="wait">
                     {error && (
@@ -179,7 +207,7 @@ export default function ProjectUploadForm() {
 
                 <div>
                     <label htmlFor="description" className="block text-sm font-medium mb-2 text-white">
-                        Description *
+                        Description
                     </label>
                     <textarea
                         id="description"
@@ -243,8 +271,8 @@ export default function ProjectUploadForm() {
                     type="submit"
                     disabled={uploading}
                     className={`w-full py-3 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${status === 'success'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-white text-black hover:opacity-90 disabled:opacity-50'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-white text-black hover:opacity-90 disabled:opacity-50'
                         }`}
                 >
                     {status === 'uploading' ? (

@@ -7,8 +7,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
+import imageCompression from 'browser-image-compression';
 import { Profile } from '@/types';
-import { supabase } from '@/lib/supabase/client';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 const profileSchema = z.object({
     bio: z.string().min(10, 'Bio must be at least 10 characters'),
@@ -45,6 +46,10 @@ export default function ProfileForm({ profile }: ProfileFormProps) {
         setSuccess(false);
 
         try {
+            if (!isSupabaseConfigured()) {
+                throw new Error('Supabase is not configured. Cannot update profile.');
+            }
+
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
                 throw new Error('You must be logged in to update your profile.');
@@ -55,8 +60,23 @@ export default function ProfileForm({ profile }: ProfileFormProps) {
 
             // 1. Upload Avatar if selected
             if (data.avatar?.[0]) {
-                const file = data.avatar[0];
-                const fileExt = file.name.split('.').pop();
+                let file = data.avatar[0];
+
+                try {
+                    const options = {
+                        maxSizeMB: 0.5, // Smaller for avatars
+                        maxWidthOrHeight: 500,
+                        useWebWorker: true,
+                    };
+                    const compressedFile = await imageCompression(file, options);
+                    if (compressedFile.size < file.size) {
+                        file = compressedFile;
+                    }
+                } catch (error) {
+                    console.error('Avatar compression failed:', error);
+                }
+
+                const fileExt = file.name.split('.').pop() || 'jpg';
                 const fileName = `avatar-${Date.now()}.${fileExt}`;
                 const filePath = `profile/${fileName}`;
 
@@ -126,6 +146,15 @@ export default function ProfileForm({ profile }: ProfileFormProps) {
     return (
         <div className="bg-white/5 backdrop-blur-sm rounded-xl p-8 border border-white/10">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {!isSupabaseConfigured() && (
+                    <div className="bg-yellow-500/10 text-yellow-400 text-sm p-4 rounded-lg border border-yellow-500/20 flex items-start gap-3 mb-6">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold mb-1">Supabase Not Configured</p>
+                            <p>Profile updates require Supabase connection. Please set up your environment variables.</p>
+                        </div>
+                    </div>
+                )}
                 {error && (
                     <div className="bg-red-500/10 text-red-400 text-sm p-3 rounded-lg border border-red-500/20 flex items-center gap-2">
                         <AlertCircle className="w-4 h-4" />
