@@ -32,7 +32,16 @@ export default function Navigation() {
         <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-background/80 backdrop-blur-md border-b border-white/10' : 'bg-transparent border-none'
             }`}>
             <div className="container-custom py-6 flex items-center justify-between">
-                <Link href="/" className="text-3xl font-script tracking-wide hover:opacity-70 transition-opacity text-foreground">
+                <Link
+                    href="/"
+                    onClick={(e) => {
+                        if (pathname === '/') {
+                            e.preventDefault();
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    }}
+                    className="text-3xl font-script tracking-wide hover:opacity-70 transition-opacity text-foreground"
+                >
                     Kingscribe
                 </Link>
 
@@ -50,7 +59,7 @@ export default function Navigation() {
                         About
                     </button>
                     <button
-                        onClick={() => scrollToSection('about')}
+                        onClick={() => scrollToSection('contact')}
                         className="text-sm font-medium hover:opacity-70 transition-opacity"
                     >
                         Contact
