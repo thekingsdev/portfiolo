@@ -35,17 +35,7 @@ const skills = [
             </svg>
         )
     },
-    {
-        name: 'Illustration',
-        svg: (
-            <svg viewBox="0 0 100 100" className="w-full h-full">
-                <path d="M20 80 Q30 20 50 50 T80 80" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.5" />
-                <circle cx="30" cy="35" r="8" fill="currentColor" opacity="0.7" />
-                <circle cx="50" cy="50" r="6" fill="currentColor" opacity="0.8" />
-                <circle cx="70" cy="65" r="10" fill="currentColor" />
-            </svg>
-        )
-    },
+
     {
         name: 'Layout Design',
         svg: (
@@ -66,6 +56,19 @@ const skills = [
             </svg>
         )
     },
+    {
+        name: 'Web Design',
+        svg: (
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+                <rect x="15" y="20" width="70" height="60" rx="4" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.5" />
+                <line x1="15" y1="35" x2="85" y2="35" stroke="currentColor" strokeWidth="4" opacity="0.5" />
+                <circle cx="25" cy="28" r="3" fill="currentColor" opacity="0.8" />
+                <circle cx="35" cy="28" r="3" fill="currentColor" opacity="0.8" />
+                <rect x="30" y="50" width="40" height="20" fill="currentColor" opacity="0.6" rx="2" />
+            </svg>
+        )
+    },
+
 ];
 
 const tools = [
@@ -76,6 +79,8 @@ const tools = [
     'After Effects',
     'Canva',
 ];
+
+
 
 export default function SkillsSection() {
     const { elementRef, isVisible } = useScrollReveal();
@@ -144,33 +149,7 @@ export default function SkillsSection() {
                         ))}
                     </div>
 
-                    {/* Tools Section - Redesigned */}
-                    <div className="text-center">
-                        <h3 className="text-3xl font-bold mb-10 text-foreground">
-                            Tools & Software
-                        </h3>
-                        <div className="flex flex-wrap gap-6 justify-center">
-                            {tools.map((tool, index) => (
-                                <div
-                                    key={tool}
-                                    className="group relative px-8 py-4 rounded-full bg-background border-2 border-foreground/20 hover:border-foreground hover:shadow-xl transition-all duration-300 hover:scale-110 overflow-hidden"
-                                    style={{
-                                        animationDelay: `${index * 0.05}s`,
-                                        opacity: isVisible ? 1 : 0,
-                                        transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${0.5 + index * 0.05}s`
-                                    }}
-                                >
-                                    {/* Sliding background effect */}
-                                    <div className="absolute inset-0 bg-foreground transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
 
-                                    {/* Tool name */}
-                                    <span className="relative font-medium text-foreground group-hover:text-background transition-colors duration-500 z-10">
-                                        {tool}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
             </div>
 

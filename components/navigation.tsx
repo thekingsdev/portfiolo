@@ -32,8 +32,8 @@ export default function Navigation() {
         <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-background/80 backdrop-blur-md border-b border-white/10' : 'bg-transparent border-none'
             }`}>
             <div className="container-custom py-6 flex items-center justify-between">
-                <Link href="/" className="text-xl font-semibold tracking-tight hover:opacity-70 transition-opacity">
-                    Portfolio
+                <Link href="/" className="text-3xl font-script tracking-wide hover:opacity-70 transition-opacity text-foreground">
+                    Kingscribe
                 </Link>
 
                 <div className="flex items-center gap-8">

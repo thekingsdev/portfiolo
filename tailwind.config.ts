@@ -17,8 +17,9 @@ const config: Config = {
                 secondary: "hsl(0, 0%, 80%)", // Light gray
             },
             fontFamily: {
-                sans: ['Inter', 'system-ui', 'sans-serif'],
+                sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
                 display: ['Playfair Display', 'serif'],
+                script: ['var(--font-monolina)', 'cursive'],
             },
             animation: {
                 'fade-in': 'fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
