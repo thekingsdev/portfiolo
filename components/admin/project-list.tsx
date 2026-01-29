@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Trash2, Loader2 } from 'lucide-react';
 import { Project } from '@/types';
 import { mockProjects } from '@/lib/mock-data';
+import { supabase } from '@/lib/supabase/client';
 
 interface ProjectListProps {
     projects: Project[];
@@ -32,12 +33,29 @@ export default function ProjectList({ projects }: ProjectListProps) {
                 // Force reload to sync grid
                 setTimeout(() => window.location.reload(), 100);
             } else {
-                const response = await fetch(`/api/projects?id=${project.id}`, {
-                    method: 'DELETE',
-                });
+                // Client-side real delete (uses auth session automatically)
 
-                if (!response.ok) {
-                    throw new Error('Failed to delete project');
+                // 1. Delete from Database
+                const { error: dbError } = await supabase
+                    .from('projects')
+                    .delete()
+                    .eq('id', project.id);
+
+                if (dbError) {
+                    throw new Error(`Database error: ${dbError.message}`);
+                }
+
+                // 2. Delete Image from Storage
+                if (project.image_url) {
+                    const path = project.image_url.split('/').slice(-2).join('/');
+                    // We don't block on this error, just log it
+                    const { error: storageError } = await supabase.storage
+                        .from('portfolio-assets')
+                        .remove([path]);
+
+                    if (storageError) {
+                        console.error('Failed to cleanup image:', storageError);
+                    }
                 }
 
                 router.refresh();

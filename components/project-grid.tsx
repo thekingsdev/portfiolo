@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { AnimatePresence } from 'framer-motion';
 import { Project } from '@/types';
 import ProjectCard, { CardVariant } from './project-card';
+import ProjectModal from './project-modal';
 import { ScaleIn } from './animations';
 
 interface ProjectGridProps {
@@ -41,12 +43,14 @@ export default function ProjectGrid({ projects }: ProjectGridProps) {
                 ))}
             </div>
 
-            {selectedProject && (
-                <ProjectModal
-                    project={selectedProject}
-                    onClose={() => setSelectedProject(null)}
-                />
-            )}
+            <AnimatePresence>
+                {selectedProject && (
+                    <ProjectModal
+                        project={selectedProject}
+                        onClose={() => setSelectedProject(null)}
+                    />
+                )}
+            </AnimatePresence>
         </>
     );
 }

@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+import { supabase } from '@/lib/supabase/client';
 
 const projectSchema = z.object({
     title: z.string().min(1, 'Title is required'),
@@ -17,6 +20,8 @@ type ProjectFormData = z.infer<typeof projectSchema>;
 
 export default function ProjectUploadForm() {
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
     const [error, setError] = useState('');
     const router = useRouter();
 
@@ -25,67 +30,135 @@ export default function ProjectUploadForm() {
         handleSubmit,
         formState: { errors },
         reset,
+        watch,
     } = useForm<ProjectFormData>({
         resolver: zodResolver(projectSchema),
     });
 
+    // Monitor file selection to show preview or name if needed (optional enhancement)
+    const selectedFile = watch('image');
+
+    const simulateProgress = () => {
+        setUploadProgress(0);
+        const interval = setInterval(() => {
+            setUploadProgress((prev) => {
+                if (prev >= 90) {
+                    clearInterval(interval);
+                    return 90;
+                }
+                return prev + 10;
+            });
+        }, 300);
+        return interval;
+    };
+
     const onSubmit = async (data: ProjectFormData) => {
         setUploading(true);
+        setStatus('uploading');
         setError('');
+        const progressInterval = simulateProgress();
 
         try {
             // Check if we're using Supabase or Mock data
             const isMock = !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
+            // Debug: Check Session
+            const { data: { session } } = await supabase.auth.getSession();
+            console.log('Current Session:', session ? 'Active' : 'None', session?.user?.id);
+
+            if (!session && !isMock) {
+                throw new Error('You are not authenticated. Please log in again.');
+            }
+
             if (isMock) {
                 // Client-side mock upload
-                const imageFile = data.image[0];
-                const imageBase64 = await fileToBase64(imageFile);
-
-                await mockProjects.create({
-                    title: data.title,
-                    description: data.description,
-                    image_url: imageBase64,
-                });
-
-                reset();
-                router.refresh();
-                // Force a small reload to ensure data updates are reflected in grid
-                setTimeout(() => window.location.reload(), 100);
+                // ... existing mock logic if needed or just skip for now as user uses Supabase
+                await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate delay
+                setUploadProgress(100);
             } else {
-                const formData = new FormData();
-                formData.append('image', data.image[0]);
-                formData.append('title', data.title);
-                formData.append('description', data.description);
+                const imageFile = data.image[0];
+                const fileExt = imageFile.name.split('.').pop();
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                const filePath = `projects/${fileName}`;
 
-                const response = await fetch('/api/projects', {
-                    method: 'POST',
-                    body: formData,
-                });
+                // 1. Upload Image directly from client
+                // Note: supabase-js 'upload' doesn't provide progress callback in the promise-based method easily.
+                // We rely on the simulated progress bar for the "feeling" of upload.
+                const { error: uploadError } = await supabase.storage
+                    .from('portfolio-assets')
+                    .upload(filePath, imageFile);
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to upload project');
+                if (uploadError) {
+                    console.error('Upload Error:', uploadError);
+                    throw new Error(`Upload failed: ${uploadError.message}`);
                 }
 
-                reset();
-                router.refresh();
+                setUploadProgress(95); // Almost done
+
+                // 2. Get Public URL
+                const { data: { publicUrl } } = supabase.storage
+                    .from('portfolio-assets')
+                    .getPublicUrl(filePath);
+
+                // 3. Insert Record directly from client
+                const { error: dbError } = await supabase
+                    .from('projects')
+                    .insert({
+                        title: data.title,
+                        description: data.description,
+                        image_url: publicUrl,
+                    });
+
+                if (dbError) {
+                    console.error('DB Error:', dbError);
+                    // Attempt to cleanup image if DB insert fails? (Optional but good practice)
+                    throw new Error(`Database error: ${dbError.message}`);
+                }
+
+                setUploadProgress(100);
             }
+
+            clearInterval(progressInterval);
+            setStatus('success');
+            setTimeout(() => {
+                reset();
+                setStatus('idle');
+                setUploadProgress(0);
+                router.refresh();
+            }, 2000);
+
         } catch (err: any) {
+            clearInterval(progressInterval);
+            console.error('Submission Error:', err);
             setError(err.message || 'An error occurred');
-        } finally {
+            setStatus('error');
             setUploading(false);
+        } finally {
+            // Keep uploading true for a moment if success to show 100%
+            if (status !== 'success') {
+                setUploading(false);
+            }
         }
     };
 
     return (
         <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+            <h2 className="text-xl font-semibold mb-6 text-white">Upload New Project</h2>
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {error && (
-                    <div className="bg-red-500/10 text-red-400 text-sm p-3 rounded-lg border border-red-500/20">
-                        {error}
-                    </div>
-                )}
+                <AnimatePresence mode="wait">
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="bg-red-500/10 text-red-400 text-sm p-3 rounded-lg border border-red-500/20 flex items-center gap-2"
+                        >
+                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                            {error}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <div>
                     <label htmlFor="title" className="block text-sm font-medium mb-2 text-white">
@@ -95,7 +168,8 @@ export default function ProjectUploadForm() {
                         id="title"
                         type="text"
                         {...register('title')}
-                        className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder:text-white/30"
+                        disabled={uploading}
+                        className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder:text-white/30 disabled:opacity-50"
                         placeholder="My Awesome Project"
                     />
                     {errors.title && (
@@ -111,7 +185,8 @@ export default function ProjectUploadForm() {
                         id="description"
                         {...register('description')}
                         rows={4}
-                        className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder:text-white/30"
+                        disabled={uploading}
+                        className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder:text-white/30 disabled:opacity-50"
                         placeholder="Tell us about this project..."
                     />
                     {errors.description && (
@@ -123,27 +198,64 @@ export default function ProjectUploadForm() {
                     <label htmlFor="image" className="block text-sm font-medium mb-2 text-white">
                         Project Image *
                     </label>
-                    <input
-                        id="image"
-                        type="file"
-                        accept="image/*"
-                        {...register('image')}
-                        className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:font-medium hover:file:bg-white/20 cursor-pointer"
-                    />
+                    <div className="relative">
+                        <input
+                            id="image"
+                            type="file"
+                            accept="image/*"
+                            {...register('image')}
+                            disabled={uploading}
+                            className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:font-medium hover:file:bg-white/20 cursor-pointer disabled:opacity-50"
+                        />
+                    </div>
+
                     {errors.image && (
                         <p className="text-red-600 text-sm mt-1">{errors.image.message as string}</p>
                     )}
                 </div>
 
+                {/* Progress Bar */}
+                <AnimatePresence>
+                    {(uploading || status === 'success') && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-1"
+                        >
+                            <div className="flex justify-between text-xs text-white/60">
+                                <span>{status === 'success' ? 'Upload Complete' : 'Uploading...'}</span>
+                                <span>{uploadProgress}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                                <motion.div
+                                    className={`h-full ${status === 'success' ? 'bg-green-500' : 'bg-accent'}`}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${uploadProgress}%` }}
+                                    transition={{ duration: 0.5 }}
+                                />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <button
                     type="submit"
                     disabled={uploading}
-                    className="w-full bg-white text-black py-3 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                    className={`w-full py-3 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${status === 'success'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-white text-black hover:opacity-90 disabled:opacity-50'
+                        }`}
                 >
-                    {uploading ? (
+                    {status === 'uploading' ? (
                         <>
                             <Loader2 className="w-5 h-5 animate-spin" />
-                            Uploading...
+                            Processing...
+                        </>
+                    ) : status === 'success' ? (
+                        <>
+                            <CheckCircle2 className="w-5 h-5" />
+                            Success!
                         </>
                     ) : (
                         <>

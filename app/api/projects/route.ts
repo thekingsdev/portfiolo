@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
             if (uploadError) {
                 console.error('Upload error:', uploadError);
                 return NextResponse.json(
-                    { error: 'Failed to upload image' },
+                    { error: `Upload failed: ${uploadError.message}` },
                     { status: 500 }
                 );
             }
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
             if (dbError) {
                 console.error('Database error:', dbError);
                 return NextResponse.json(
-                    { error: 'Failed to create project' },
+                    { error: `Database error: ${dbError.message}` },
                     { status: 500 }
                 );
             }
