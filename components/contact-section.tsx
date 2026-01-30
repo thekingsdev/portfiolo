@@ -1,4 +1,5 @@
 'use client';
+// Fixed apostrophe build error
 
 import { useState } from 'react';
 import { useScrollReveal } from '@/hooks/use-scroll-reveal';
