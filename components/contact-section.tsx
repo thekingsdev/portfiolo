@@ -69,10 +69,10 @@ export default function ContactSection() {
                                 Contact
                             </span>
                             <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/50">
-                                Let's Work Together
+                                Let&apos;s Work Together
                             </h2>
                             <p className="text-xl text-foreground/60 leading-relaxed">
-                                Have a project in mind or just want to say hi? I'm always open to discussing new ideas and opportunities.
+                                Have a project in mind or just want to say hi? I&apos;m always open to discussing new ideas and opportunities.
                             </p>
                         </div>
 
