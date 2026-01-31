@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useRef, useState, ReactNode } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 
@@ -123,14 +124,6 @@ export default function TiltedCard({
                     transformStyle: 'preserve-3d',
                 }}
             >
-                import Image from 'next/image';
-                import {useRef, useState, ReactNode} from 'react';
-                import {motion, useMotionValue, useSpring} from 'framer-motion';
-
-                interface TiltedCardProps {
-                    imageSrc: string;
-                // ... (keeping lines 6-125 unchanged, except import)
-
                 <Image
                     src={imageSrc}
                     alt={altText}
