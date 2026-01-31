@@ -123,14 +123,20 @@ export default function TiltedCard({
                     transformStyle: 'preserve-3d',
                 }}
             >
-                <motion.img
+                import Image from 'next/image';
+                import {useRef, useState, ReactNode} from 'react';
+                import {motion, useMotionValue, useSpring} from 'framer-motion';
+
+                interface TiltedCardProps {
+                    imageSrc: string;
+                // ... (keeping lines 6-125 unchanged, except import)
+
+                <Image
                     src={imageSrc}
                     alt={altText}
-                    className="absolute top-0 left-0 object-cover rounded-2xl will-change-transform shadow-2xl"
-                    style={{
-                        width: imageWidth,
-                        height: imageHeight,
-                    }}
+                    fill
+                    className="object-cover rounded-2xl shadow-2xl"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
 
                 {displayOverlayContent && overlayContent && (
